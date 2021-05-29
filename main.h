@@ -20,6 +20,7 @@
 #include "HPS_PrivateTimer/HPS_PrivateTimer.h"
 #include "Sprites/MarioSprites.h"						// sprite bitmaps
 #include "Sprites/BackgroundSprites.h"
+#include "Sprites/PlatformSprites.h"
 
 // define hardware base addresses
 volatile unsigned int *key_edge_ptr = (unsigned int *)0xFF20005C;	// KEYS 0-3 (push buttons)

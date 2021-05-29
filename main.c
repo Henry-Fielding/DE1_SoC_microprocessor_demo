@@ -12,15 +12,19 @@
 
 #include "main.h"
 
+struct position {
+	signed int xNew, yNew, xPrev, yPrev;
+};
+
 main() {
 	const unsigned short* playerSprite;
-	signed int temp = 1;
-	signed int xOld = 0;
-	signed int yOld = 0;
-	signed int xNew = 50;
-	signed int yNew = 50;
 	unsigned int timerLast = 0;
+	int i;
 
+	float dx = 0, dy = 0;
+
+	struct position player;
+	struct position platform[10];
 	//configure drivers
 	configure_privateTimer();
 	Timer_setControl(224, 0, 1, 1);
@@ -30,36 +34,78 @@ main() {
 
 	HPS_ResetWatchdog();
 
+	pushButtons_clear ();
+	while (!*key_edge_ptr & 0x01) HPS_ResetWatchdog();// do nothing while waiting for key press
+	pushButtons_clear ();
+
+	srand(Timer_readTimer());
+
 	LT24_copyFrameBuffer(background, 0, 0, 240, 320);
 
+	// set player position
+	player.xNew = 102;
+	player.yNew = 240;
+	player.xPrev = player.xNew;
+	player.yPrev = player.yNew;
+
+	// generate 10 platforms and assign positions randomly on screen
+	platform[0].xNew = 96;
+	platform[0].yNew = 304;
+	platform[0].xPrev = platform[i].xNew;
+	platform[0].yPrev = platform[i].yNew;
+
+	for (i = 1; i < 10; i++) {
+		platform[i].xNew = rand()%191;
+		platform[i].yNew = platform[i-1].yNew - (rand()%84 + 16);
+		platform[i].xPrev = platform[i].xNew;
+		platform[i].yPrev = platform[i].yNew;
+		HPS_ResetWatchdog();
+	}
 
 	while (1) {
 		if (timerLast - Timer_readTimer() >= 25000){
 			timerLast = Timer_readTimer();
 
-			xOld = xNew;
-			yOld = yNew;
-			if (*key_ptr & 0x01) xNew = xNew + 1;
-			else if (*key_ptr & 0x02) xNew = xNew - 1;
-			else if (*key_ptr & 0x04) xNew = xNew + 5;
-			else if (*key_ptr & 0x08) xNew = xNew - 5;
+//			if (*key_ptr & 0x01) xNew = xNew + 1;
+//			else if (*key_ptr & 0x02) xNew = xNew - 1;
+//			else if (*key_ptr & 0x04) xNew = xNew + 5;
+//			else if (*key_ptr & 0x08) xNew = xNew - 5;
+//
+//			pushButtons_clear();
+//
+//			if (temp == 1)		playerSprite = marioRightStand;
+//			else if (temp == 2)	playerSprite = marioRightWalk1;
+//			else if (temp == 3)	playerSprite = marioRightWalk2;
+//			else if (temp == 4)	playerSprite = marioRightWalk3;
+//
+			playerSprite = marioRightStand;
 
-			pushButtons_clear();
-	//		else if (*key_edge_ptr & 0x04)
-	//		else if (*key_edge_ptr & 0x08)
+			player.yPrev = player.yNew;
+
+			dy = dy + 0.5; // reduce player velocity
+			player.yNew = player.yNew + dy;
+
+			// bounce on bottom of screen
+			if (player.yNew > 240) {
+				dy = -10;
+				player.yNew = 240;
+			}
 
 
 
-			if (temp == 1)		playerSprite = marioRightStand;
-			else if (temp == 2)	playerSprite = marioRightWalk1;
-			else if (temp == 3)	playerSprite = marioRightWalk2;
-			else if (temp == 4)	playerSprite = marioRightWalk3;
 
-			//
 
-			//if (xNew != xOld || yNew != yOld) clearbackground(background, xOld, yOld, 32, 64);
-			LT24_drawSprite(background, playerSprite, xNew, yNew, 32, 64, xNew - xOld, yNew - yOld);
+
+			// draw sprites
+			for (i = 0; i < 10; i++) {
+				if (platform[i].yNew >= 0) {
+					LT24_drawSprite2(background, platformSprite, platform[i].xNew, platform[i].yNew, 48, 16, platform[i].xNew - platform[i].xPrev, platform[i].yNew - platform[i].yPrev);
+				}
+			}
+				LT24_drawSprite2(background, playerSprite, player.xNew, player.yNew, 32, 64, player.xNew - player.xPrev, player.yNew - player.yPrev);
 		}
+
+
 			// Finally, reset the watchdog timer.
 			HPS_ResetWatchdog();
 	}
