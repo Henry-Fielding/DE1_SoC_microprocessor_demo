@@ -29,6 +29,13 @@ volatile unsigned int *key_edge_ptr = (unsigned int *)0xFF20005C;	// KEYS 0-3 (p
 volatile unsigned int *LEDR_ptr = (unsigned int *)0xFF200000; 		// LEDS 0-9
 volatile unsigned int *key_ptr = (unsigned int *)0xFF200050; // KEYS 0-3 (push buttons)
 
+
+struct position {
+	signed int x, y;
+	float dx, dy;
+	const unsigned short* spriteId;
+};
+
 //
 // function declarations
 //
@@ -44,4 +51,8 @@ void clearbackground (const unsigned short*, unsigned int, unsigned int, unsigne
 void configure_privateTimer (void);
 
 void resetFrame (unsigned short* currentFrame, const unsigned short* background);
+
+void initPlatforms (struct position*);
+void initPlayer (struct position*);
+
 #endif /* MAIN_H_ */

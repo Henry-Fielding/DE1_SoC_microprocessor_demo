@@ -13,9 +13,6 @@
 #include "main.h"
 
 
-struct position {
-	signed int xNew, yNew, xPrev, yPrev;
-};
 
 main() {
 	const unsigned short* playerSprite;
@@ -24,10 +21,16 @@ main() {
 	unsigned int timerLast = 0;
 	int i;
 
-	float dx = 0, dy = 0;
+
 
 	struct position player;
 	struct position platform[10];
+
+	initPlayer(&player);
+	initPlatforms(platform);
+
+
+
 	//configure drivers
 	configure_privateTimer();
 	Timer_setControl(224, 0, 1, 1);
@@ -45,25 +48,13 @@ main() {
 
 	LT24_copyFrameBuffer(background, 0, 0, 240, 320);
 
+
+
+
 	// set player position
-	player.xNew = 102;
-	player.yNew = 240;
-	player.xPrev = player.xNew;
-	player.yPrev = player.yNew;
+//	player.x = 102;
+//	player.y = 240;
 
-	// generate 10 platforms and assign positions randomly on screen
-	platform[0].xNew = 96;
-	platform[0].yNew = 304;
-	platform[0].xPrev = platform[i].xNew;
-	platform[0].yPrev = platform[i].yNew;
-
-	for (i = 1; i < 10; i++) {
-		platform[i].xNew = rand()%191;
-		platform[i].yNew = platform[i-1].yNew - (rand()%70 + 16);
-		platform[i].xPrev = platform[i].xNew;
-		platform[i].yPrev = platform[i].yNew;
-		HPS_ResetWatchdog();
-	}
 
 	while (1) {
 		if (timerLast - Timer_readTimer() >= 16666){
@@ -72,41 +63,38 @@ main() {
 			playerSprite = marioRightStand;
 
 			// player motion in y direction
-			player.yPrev = player.yNew;
-			dy = dy + 0.5; // reduce player velocity
-			player.yNew = player.yNew + dy;
+
+			player.dy = player.dy + 0.5; // reduce player velocity
+			player.y = player.y + player.dy;
 			// bounce on bottom of screen
-			if (player.yNew > 240) {
-				dy = -10;
-				player.yNew = 240;
+			if (player.y > 240) {
+				player.dy = -10;
+				player.y = 240;
 			} else {
 				for (i = 0; i < 10; i++){
-					if ((player.xNew + 32 > platform[i].xNew) && (player.xNew < platform[i].xNew + 48)
-					&& (player.yNew + 64 > platform[i].yNew) && (player.yNew +64 < platform[i].yNew + 16)
-					&& (dy > 0)){
-						dy = -10;
+					if ((player.x + 32 > platform[i].x) && (player.x < platform[i].x + 48)
+					&& (player.y + 64 > platform[i].y) && (player.y +64 < platform[i].y + 16)
+					&& (player.dy > 0)){
+						player.dy = -10;
 					}
 				}
 			}
 
 			// player motion in x direction
-			player.xPrev = player.xNew;
-			if (*key_ptr & 0x01) player.xNew  = player.xNew + 5;
-			else if (*key_ptr & 0x02) player.xNew  = player.xNew - 5;
+			if (*key_ptr & 0x01) player.x  = player.x + 5;
+			else if (*key_ptr & 0x02) player.x  = player.x - 5;
 
 			// platform motion
-			if (player.yNew < 120) {
-				player.yNew = 120;
+			if (player.y < 120) {
+				player.y = 120;
 				for (i = 0; i < 10; i++) {
-					platform[i].yPrev = platform[i].yNew;
-					platform[i].yNew = platform[i].yNew - dy;
+					platform[i].dy = player.dy;
+					platform[i].y = platform[i].y - platform[i].dy;
 
-					if (platform[i].yNew > 320){
-						platform[i].xNew = rand()%191;
-						if (i == 0)	platform[i].yNew = platform[9].yNew - (rand()%84 + 16);
-						else 		platform[i].yNew = platform[i-1].yNew - (rand()%84 + 16);
-						platform[i].xPrev = platform[i].xNew;
-						platform[i].yPrev = platform[i].yNew;
+					if (platform[i].y > 320){
+						platform[i].x = rand()%191;
+						if (i == 0)	platform[i].y = platform[9].y - (rand()%84 + 16);
+						else 		platform[i].y = platform[i-1].y - (rand()%84 + 16);
 					}
 				}
 			}
@@ -120,12 +108,12 @@ main() {
 			resetFrame(currentFrame, background);
 
 			for (i = 0; i < 10; i++) {
-				if (platform[i].yNew >= -16 && platform[i].yNew < 350) {
-					addToFrame(currentFrame, platformSprite, platform[i].xNew, platform[i].yNew, 48, 16);
+				if (platform[i].y >= -16 && platform[i].y < 350) {
+					addToFrame(currentFrame, platform[i].spriteId, platform[i].x, platform[i].y, 48, 16);
 				}
 			}
 
-				addToFrame(currentFrame, playerSprite, player.xNew, player.yNew, 32, 64); 	// draw player sprite
+				addToFrame(currentFrame, playerSprite, player.x, player.y, 32, 64); 	// draw player sprite
 				addToFrame(currentFrame, waterSprite, 0, 288, 240, 32); 					//draw water sprite
 
 
@@ -136,6 +124,35 @@ main() {
 			HPS_ResetWatchdog();
 	}
 }
+
+void initPlayer (struct position* player) {
+	player->x 			= 102;
+	player->y 			= 240;
+	player->dx			= 0;
+	player->dy			= -10;
+	player->spriteId	= marioRightStand;
+}
+
+
+void initPlatforms (struct position* platform) {
+	//struct position platform[10];
+// generate 10 platforms and assign positions randomly on screen
+	int i;
+	platform[0].x = 96;
+	platform[0].y = 304;
+	platform[0].dx = 0;
+	platform[0].dy = 0;
+	platform[0].spriteId = platformSprite;
+
+	for (i = 1; i < 10; i++) {
+		platform[i].x = rand()%191;
+		platform[i].y = platform[i-1].y - (rand()%70 + 16);
+		platform[i].dx = 0;
+		platform[i].dy = 0;
+		platform[i].spriteId = platformSprite;
+	}
+}
+
 
 void resetFrame (unsigned short* currentFrame, const unsigned short* background) {
 	unsigned int index;
