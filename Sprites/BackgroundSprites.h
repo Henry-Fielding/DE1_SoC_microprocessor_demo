@@ -15,5 +15,4 @@
 // declare bitmap arrays
 extern const unsigned short background[76800];
 
-
 #endif /* BACKGROUND_SPRITES_H_ */
