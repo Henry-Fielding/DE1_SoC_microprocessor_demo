@@ -14,6 +14,11 @@
 
 // declare bitmap arrays
 extern const unsigned short marioRightStand[2048];
+extern const unsigned short marioLeftStand[2048];
+extern const unsigned short marioRightJump[2048];
+extern const unsigned short marioLeftJump[2048];
+
+
 extern const unsigned short marioRightWalk1[2048];
 extern const unsigned short marioRightWalk2[2048];
 extern const unsigned short marioRightWalk3[2048];

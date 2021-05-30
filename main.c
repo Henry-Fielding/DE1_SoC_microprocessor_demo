@@ -12,12 +12,14 @@
 
 #include "main.h"
 
-#define MAX_VELOCITY 15;
-#define DECELERATION 1;
+#define MAX_VERT_VELOCITY 15 // maximum velocity of player when bouncing
+#define VERT_ACCELERATION 1	// VERT_ACCELERATION rate of player when bouncing
+#define HORZ_ACCELERATION 1
+
+#define MAX_HEIGHT 120	// max screen height reached by player when bouncing (screen scrolls beyond this)
 
 main() {
-	const unsigned short* playerSprite;
-	const unsigned short* waterSprite;
+	const unsigned short* waterSprite = water0;
 	unsigned short currentFrame[76800];
 	unsigned int timerLast = 0;
 	int i;
@@ -53,44 +55,10 @@ main() {
 			timerLast = Timer_readTimer();
 
 			updatePlayer(&player, platform);
-//			// player motion in y direction
-//			player.dy = player.dy + 0.5; // reduce player velocity
-//			player.y = player.y + player.dy;
-//			// bounce on bottom of screen
-//			if (player.y > 240) {
-//				player.dy = -10;
-//				player.y = 240;
-//			} else {
-//				for (i = 0; i < 10; i++){
-//					if ((player.x + 32 > platform[i].x) && (player.x < platform[i].x + 48)
-//					&& (player.y + 64 > platform[i].y) && (player.y +64 < platform[i].y + 16)
-//					&& (player.dy > 0)){
-//						player.dy = -10;
-//					}
-//				}
-//			}
+			updateScreenPosition(&player, platform);
+			updateWaterAnimation(waterSprite);
 
-//			// player motion in x direction
-//			if (*key_ptr & 0x01) player.x  = player.x + 5;
-//			else if (*key_ptr & 0x02) player.x  = player.x - 5;
 
-			// platform motion
-			if (player.y < 120) {
-				player.y = 120;
-				for (i = 0; i < 10; i++) {
-					platform[i].dy = player.dy;
-					platform[i].y = platform[i].y - platform[i].dy;
-
-					if (platform[i].y > 320){
-						platform[i].x = rand()%191;
-						if (i == 0)	platform[i].y = platform[9].y - (rand()%84 + 16);
-						else 		platform[i].y = platform[i-1].y - (rand()%84 + 16);
-					}
-				}
-			}
-
-			// update water animation
-			waterSprite = water0;
 
 			// draw sprites
 
@@ -102,13 +70,11 @@ main() {
 				}
 			}
 
-				addToFrame(currentFrame, player.spriteId, player.x, player.y, 32, 64); 	// draw player sprite
-				addToFrame(currentFrame, waterSprite, 0, 288, 240, 32); 					//draw water sprite
+			addToFrame(currentFrame, player.spriteId, player.x, player.y, 32, 64); 	// draw player sprite
+			addToFrame(currentFrame, waterSprite, 0, 288, 240, 32); 					//draw water sprite
 
-
-				LT24_copyFrameBuffer(currentFrame, 0, 0, 240, 320);
+			LT24_copyFrameBuffer(currentFrame, 0, 0, 240, 320);
 		}
-
 			// Finally, reset the watchdog timer.
 			HPS_ResetWatchdog();
 	}
@@ -121,7 +87,6 @@ void initPlayer (struct position* player) {
 	player->dy			= 0;
 	player->spriteId	= marioRightStand;
 }
-
 
 void initPlatforms (struct position* platform) {
 	//struct position platform[10];
@@ -144,13 +109,21 @@ void initPlatforms (struct position* platform) {
 
 void updatePlayer (struct position* player, struct position* platform) {
 	// player motion in y direction
-	player->dy = player->dy + DECELERATION; // reduce player velocity
+	player->dy = player->dy + VERT_ACCELERATION; // reduce player velocity
 	player->y = player->y + player->dy;
 
 	// player motion in x direction
-	if (*key_ptr & 0x01) player->x  = player->x + 5;
-	else if (*key_ptr & 0x02) player->x  = player->x - 5;
+	if (*key_ptr & 0x01) {
+		player->dx = player->dx + HORZ_ACCELERATION;
+		player->spriteId = marioRightJump;
+	} else if (*key_ptr & 0x02) {
+		player->dx = player->dx - HORZ_ACCELERATION;
+		player->spriteId = marioLeftJump;
+	}
 
+	player->x  = player->x + player->dx;
+	if (player->x < 0) player->x = 0;
+	if (player->x > 207) player->x = 207;
 
 	checkCollisions(player, platform);
 }
@@ -158,20 +131,41 @@ void updatePlayer (struct position* player, struct position* platform) {
 void checkCollisions(struct position* player, struct position* platform) {
 	int i;
 
-	// bounce on bottom of screen
-//	if (player->y > 240) {
-//		player->dy = -MAX_VELOCITY;
-//		player->y = 240;
-//	} else {
 	for (i = 0; i < 10; i++){
 		if ((player->x + 32 > platform[i].x) && (player->x < platform[i].x + 48)
 		&& (player->y + 64 > platform[i].y) && (player->y +64 < platform[i].y + 16)
 		&& (player->dy > 0)){
-			player->dy = -MAX_VELOCITY;
+			player->dy = -MAX_VERT_VELOCITY;
+			if (player->spriteId == marioRightJump) player->spriteId = marioRightStand;
+			if (player->spriteId == marioLeftJump) player->spriteId = marioLeftStand;
 		}
 	}
-//	}
+}
 
+void updateScreenPosition(struct position* player, struct position* platform) {
+	int i;
+
+	if (player->y < MAX_HEIGHT) {
+		player->y = 120;
+		for (i = 0; i < 10; i++) {
+			platform[i].dy = player->dy;
+			platform[i].y = platform[i].y - platform[i].dy;
+
+			if (platform[i].y > 320){
+				platform[i].x = rand()%191;
+				if (i == 0)	platform[i].y = platform[9].y - (rand()%84 + 16);
+				else 		platform[i].y = platform[i-1].y - (rand()%84 + 16);
+			}
+		}
+	}
+
+}
+
+void updateWaterAnimation(const unsigned short* waterSprite) {
+	if 		(waterSprite == &water0)	waterSprite = water1;
+	else if	(waterSprite == &water1)	waterSprite = water2;
+	else if	(waterSprite == &water2)	waterSprite = water3;
+	else if	(waterSprite == *water3)	waterSprite = water0;
 }
 
 //void update screen() {};

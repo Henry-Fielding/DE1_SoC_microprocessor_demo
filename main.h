@@ -60,5 +60,8 @@ void updatePlayer (struct position* player, struct position* platform);
 
 void checkCollisions(struct position* player, struct position* platform);
 
+void updateScreenPosition(struct position* player, struct position* platform);
+
+void updateWaterAnimation(const unsigned short* waterSprite);
 
 #endif /* MAIN_H_ */
