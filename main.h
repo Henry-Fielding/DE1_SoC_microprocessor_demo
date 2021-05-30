@@ -37,7 +37,7 @@ volatile unsigned int *key_ptr = (unsigned int *)0xFF200050; // KEYS 0-3 (push b
 // clears all set bits in the key edge register by writing 1 to them
 void pushButtons_clear (void);
 
-void addToFrame (unsigned short* currentFrame, const unsigned short* newLayer, unsigned int xOrigin, unsigned int yOrigin, unsigned int width, unsigned int height);
+void addToFrame (unsigned short* currentFrame, const unsigned short* newLayer, signed int xOrigin, signed int yOrigin, unsigned int width, unsigned int height);
 
 void clearbackground (const unsigned short*, unsigned int, unsigned int, unsigned int, unsigned int);
 

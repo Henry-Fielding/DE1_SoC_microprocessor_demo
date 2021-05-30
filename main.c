@@ -19,6 +19,7 @@ struct position {
 
 main() {
 	const unsigned short* playerSprite;
+	const unsigned short* waterSprite;
 	unsigned short currentFrame[76800];
 	unsigned int timerLast = 0;
 	int i;
@@ -110,20 +111,23 @@ main() {
 				}
 			}
 
+			// update water animation
+			waterSprite = water0;
+
 			// draw sprites
 			//addToFrame(currentFrame, background, 0, 0, 240, 320);
 //			memcpy (currentFrame, background, 5*sizeof(unsigned short));
 			resetFrame(currentFrame, background);
 
 			for (i = 0; i < 10; i++) {
-				if (platform[i].yNew >= 0 && platform[i].yNew < 300) {
-					//LT24_drawSprite2(background, platformSprite, platform[i].xNew, platform[i].yNew, 48, 16, platform[i].xNew - platform[i].xPrev, platform[i].yNew - platform[i].yPrev);
+				if (platform[i].yNew >= -16 && platform[i].yNew < 350) {
 					addToFrame(currentFrame, platformSprite, platform[i].xNew, platform[i].yNew, 48, 16);
 				}
 			}
 
-				addToFrame(currentFrame, playerSprite, player.xNew, player.yNew, 32, 64);
-				//LT24_drawSprite2(currentFrame, playerSprite, player.xNew, player.yNew, 32, 64, player.xNew - player.xPrev, player.yNew - player.yPrev);
+				addToFrame(currentFrame, playerSprite, player.xNew, player.yNew, 32, 64); 	// draw player sprite
+				addToFrame(currentFrame, waterSprite, 0, 288, 240, 32); 					//draw water sprite
+
 
 				LT24_copyFrameBuffer(currentFrame, 0, 0, 240, 320);
 		}
@@ -140,17 +144,26 @@ void resetFrame (unsigned short* currentFrame, const unsigned short* background)
 	}
 }
 
-void addToFrame (unsigned short* currentFrame, const unsigned short* newLayer,unsigned int xOrigin, unsigned int yOrigin, unsigned int width, unsigned int height) {
-	// at beginning of each loop start with background layer
-	// after each write add the new layer to the current Frame
-	// feed the new frame into the LCD
-	unsigned int xAddr, yAddr, newLayerIndex, currentFrameIndex;
+void addToFrame (unsigned short* currentFrame, const unsigned short* newLayer, signed int xOrigin, signed int yOrigin, unsigned int width, unsigned int height) {
+	signed int xInit, yInit, xEnd, yEnd;
+	signed int xAddr, yAddr, newLayerIndex, currentFrameIndex;
 
-	unsigned int xEnd = xOrigin + width;
-	unsigned int yEnd = yOrigin + height;
+	// select section of sprite that is on screen
+	xInit = xOrigin;
+	if (xInit < 0) xInit = 0;
 
-	for(yAddr = yOrigin; yAddr < yEnd ; yAddr++) {
-		for (xAddr = xOrigin; xAddr < xEnd ; xAddr++) {
+	yInit = yOrigin;
+	if (yInit < 0) yInit = 0;
+
+	xEnd = xOrigin + width;
+	if (xEnd > 319) xEnd = 319;
+
+	yEnd = yOrigin + height;
+	if (yEnd > 319) yEnd = 319;
+
+	// transfer sprite to current Frame
+	for(yAddr = yOrigin; yAddr <= yEnd ; yAddr++) {
+		for (xAddr = xOrigin; xAddr <= xEnd ; xAddr++) {
 			newLayerIndex = (yAddr - yOrigin) * width + (xAddr - xOrigin);
 			currentFrameIndex = (yAddr * 240) + xAddr;
 
@@ -160,8 +173,6 @@ void addToFrame (unsigned short* currentFrame, const unsigned short* newLayer,un
 		}
 	}
 }
-
-
 
 // function to clear inputs
 // clears all set bits in the key edge register by writing 1 to them
