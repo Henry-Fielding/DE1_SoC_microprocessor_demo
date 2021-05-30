@@ -12,7 +12,8 @@
 
 #include "main.h"
 
-
+#define MAX_VELOCITY 15;
+#define DECELERATION 1;
 
 main() {
 	const unsigned short* playerSprite;
@@ -20,8 +21,6 @@ main() {
 	unsigned short currentFrame[76800];
 	unsigned int timerLast = 0;
 	int i;
-
-
 
 	struct position player;
 	struct position platform[10];
@@ -40,49 +39,40 @@ main() {
 
 	HPS_ResetWatchdog();
 
+	// introduction
 	pushButtons_clear ();
-	while (!*key_edge_ptr & 0x01) HPS_ResetWatchdog();// do nothing while waiting for key press
+	while (!*key_edge_ptr & 0x01) HPS_ResetWatchdog(); // do nothing while waiting for key press
 	pushButtons_clear ();
 
 	srand(Timer_readTimer());
 
 	LT24_copyFrameBuffer(background, 0, 0, 240, 320);
 
-
-
-
-	// set player position
-//	player.x = 102;
-//	player.y = 240;
-
-
 	while (1) {
 		if (timerLast - Timer_readTimer() >= 16666){
 			timerLast = Timer_readTimer();
 
-			playerSprite = marioRightStand;
+			updatePlayer(&player, platform);
+//			// player motion in y direction
+//			player.dy = player.dy + 0.5; // reduce player velocity
+//			player.y = player.y + player.dy;
+//			// bounce on bottom of screen
+//			if (player.y > 240) {
+//				player.dy = -10;
+//				player.y = 240;
+//			} else {
+//				for (i = 0; i < 10; i++){
+//					if ((player.x + 32 > platform[i].x) && (player.x < platform[i].x + 48)
+//					&& (player.y + 64 > platform[i].y) && (player.y +64 < platform[i].y + 16)
+//					&& (player.dy > 0)){
+//						player.dy = -10;
+//					}
+//				}
+//			}
 
-			// player motion in y direction
-
-			player.dy = player.dy + 0.5; // reduce player velocity
-			player.y = player.y + player.dy;
-			// bounce on bottom of screen
-			if (player.y > 240) {
-				player.dy = -10;
-				player.y = 240;
-			} else {
-				for (i = 0; i < 10; i++){
-					if ((player.x + 32 > platform[i].x) && (player.x < platform[i].x + 48)
-					&& (player.y + 64 > platform[i].y) && (player.y +64 < platform[i].y + 16)
-					&& (player.dy > 0)){
-						player.dy = -10;
-					}
-				}
-			}
-
-			// player motion in x direction
-			if (*key_ptr & 0x01) player.x  = player.x + 5;
-			else if (*key_ptr & 0x02) player.x  = player.x - 5;
+//			// player motion in x direction
+//			if (*key_ptr & 0x01) player.x  = player.x + 5;
+//			else if (*key_ptr & 0x02) player.x  = player.x - 5;
 
 			// platform motion
 			if (player.y < 120) {
@@ -103,8 +93,7 @@ main() {
 			waterSprite = water0;
 
 			// draw sprites
-			//addToFrame(currentFrame, background, 0, 0, 240, 320);
-//			memcpy (currentFrame, background, 5*sizeof(unsigned short));
+
 			resetFrame(currentFrame, background);
 
 			for (i = 0; i < 10; i++) {
@@ -113,7 +102,7 @@ main() {
 				}
 			}
 
-				addToFrame(currentFrame, playerSprite, player.x, player.y, 32, 64); 	// draw player sprite
+				addToFrame(currentFrame, player.spriteId, player.x, player.y, 32, 64); 	// draw player sprite
 				addToFrame(currentFrame, waterSprite, 0, 288, 240, 32); 					//draw water sprite
 
 
@@ -127,9 +116,9 @@ main() {
 
 void initPlayer (struct position* player) {
 	player->x 			= 102;
-	player->y 			= 240;
+	player->y 			= 208;
 	player->dx			= 0;
-	player->dy			= -10;
+	player->dy			= 0;
 	player->spriteId	= marioRightStand;
 }
 
@@ -139,7 +128,7 @@ void initPlatforms (struct position* platform) {
 // generate 10 platforms and assign positions randomly on screen
 	int i;
 	platform[0].x = 96;
-	platform[0].y = 304;
+	platform[0].y = 272;
 	platform[0].dx = 0;
 	platform[0].dy = 0;
 	platform[0].spriteId = platformSprite;
@@ -153,6 +142,39 @@ void initPlatforms (struct position* platform) {
 	}
 }
 
+void updatePlayer (struct position* player, struct position* platform) {
+	// player motion in y direction
+	player->dy = player->dy + DECELERATION; // reduce player velocity
+	player->y = player->y + player->dy;
+
+	// player motion in x direction
+	if (*key_ptr & 0x01) player->x  = player->x + 5;
+	else if (*key_ptr & 0x02) player->x  = player->x - 5;
+
+
+	checkCollisions(player, platform);
+}
+
+void checkCollisions(struct position* player, struct position* platform) {
+	int i;
+
+	// bounce on bottom of screen
+//	if (player->y > 240) {
+//		player->dy = -MAX_VELOCITY;
+//		player->y = 240;
+//	} else {
+	for (i = 0; i < 10; i++){
+		if ((player->x + 32 > platform[i].x) && (player->x < platform[i].x + 48)
+		&& (player->y + 64 > platform[i].y) && (player->y +64 < platform[i].y + 16)
+		&& (player->dy > 0)){
+			player->dy = -MAX_VELOCITY;
+		}
+	}
+//	}
+
+}
+
+//void update screen() {};
 
 void resetFrame (unsigned short* currentFrame, const unsigned short* background) {
 	unsigned int index;

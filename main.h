@@ -52,7 +52,13 @@ void configure_privateTimer (void);
 
 void resetFrame (unsigned short* currentFrame, const unsigned short* background);
 
-void initPlatforms (struct position*);
 void initPlayer (struct position*);
+
+void initPlatforms (struct position*);
+
+void updatePlayer (struct position* player, struct position* platform);
+
+void checkCollisions(struct position* player, struct position* platform);
+
 
 #endif /* MAIN_H_ */
