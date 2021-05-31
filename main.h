@@ -23,6 +23,8 @@
 #include "HPS_PrivateTimer/HPS_PrivateTimer.h"
 #include "BasicFont/BasicFont.h"
 
+#include "ScreenBuffer.h"
+
 #include "Sprites/Sprites.h"						// sprite bitmaps
 
 
@@ -52,7 +54,6 @@ void clearbackground (const unsigned short*, unsigned int, unsigned int, unsigne
 
 void configure_privateTimer (void);
 
-void resetFrame (unsigned short* currentFrame, const unsigned short* background);
 
 void initPlayer (struct position*);
 
@@ -68,8 +69,5 @@ void updateWaterAnimation(const unsigned short** waterSprite);
 
 void display_ScoreSevenSeg (float score);
 
-void ScreenBuffer_generateChar (unsigned short* charSprite, char letter, unsigned int size , unsigned short colour);
-
-void ScreenBuffer_addCharsToFrame(unsigned short* currentFrame, char* string, unsigned int size, unsigned int colour, unsigned int xOrigin, unsigned int yOrigin);
 
 #endif /* MAIN_H_ */
