@@ -46,7 +46,7 @@ void ScreenBuffer_drawScore(unsigned short* screenBuffer, int score, unsigned in
 	char scoreChar[10], digitChar[1];
 	int i, digit;
 
-	strncpy(scoreChar, "Score: ", 10);
+	strncpy(scoreChar, "Score: ", 8);
 	for (i = 2; i >= 0; i--) {
 		digit = score/(pow(10,i));
 		digit = digit % 10;
@@ -54,7 +54,7 @@ void ScreenBuffer_drawScore(unsigned short* screenBuffer, int score, unsigned in
 		strcat(scoreChar, digitChar);
 	}
 
-	ScreenBuffer_drawString(screenBuffer, scoreChar, 2, 0XFFFF, 120, 305);
+	ScreenBuffer_drawString(screenBuffer, scoreChar, size, 0XFFFF, xOrigin, yOrigin);
 }
 
 void ScreenBuffer_drawString(unsigned short* screenBuffer, char* string, unsigned int size, unsigned int colour, unsigned int xOrigin, unsigned int yOrigin) {
