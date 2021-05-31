@@ -23,9 +23,14 @@ main() {
 	unsigned short currentFrame[76800];
 	unsigned int timerLast = 0;
 	float score = 0;
-	char scoreChar[10] = "SCR";
+
 	int i;
 	int j;
+
+
+	char scoreChar[10];
+	char test[1];
+	volatile int digit;
 
 
 	//unsigned short letter[160];
@@ -123,6 +128,14 @@ main() {
 
 			//ScreenBuffer_generateChar (charSprite, 'F', 2, 0xF000);
 			//addToFrame(currentFrame, charSprite, 50, 50, 5*2, 8*2);
+
+			strncpy(scoreChar, "Score: ", 10);
+			for (i = 2; i >= 0; i--) {
+				digit = score/(pow(10,i));
+				digit = digit % 10;
+				test[0] = digit + '0';
+				strcat(scoreChar, test);
+			}
 
 			ScreenBuffer_addCharsToFrame(currentFrame, scoreChar, 2, 0XFFFF, 120, 305);
 

@@ -14,6 +14,7 @@
 #define MAIN_H_
 
 #include <string.h>
+#include <math.h>
 
 // include required header files
 #include "HPS_Watchdog/HPS_Watchdog.h"			// hardware drivers
