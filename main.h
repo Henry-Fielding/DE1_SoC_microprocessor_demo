@@ -27,6 +27,14 @@
 
 #include "Sprites/Sprites.h"						// sprite bitmaps
 
+enum State {
+	INTRO,
+	INIT,
+	GAMELOOP,
+	GAMEOVER
+};
+
+
 
 // define hardware base addresses
 volatile unsigned int *key_edge_ptr = (unsigned int *)0xFF20005C;	// KEYS 0-3 (push buttons)
@@ -34,7 +42,7 @@ volatile unsigned int *LEDR_ptr = (unsigned int *)0xFF200000; 		// LEDS 0-9
 volatile unsigned int *key_ptr = (unsigned int *)0xFF200050; // KEYS 0-3 (push buttons)
 
 
-struct position {
+struct object {
 	signed int x, y;
 	float dx, dy;
 	const unsigned short* spriteId;
@@ -55,17 +63,17 @@ void clearbackground (const unsigned short*, unsigned int, unsigned int, unsigne
 void configure_privateTimer (void);
 
 
-void initPlayer (struct position*);
+void initPlayer (struct object*);
 
-void initPlatforms (struct position*);
+void initPlatforms (struct object*);
 
-void updatePlayer (struct position* player, struct position* platform);
+void updatePlayer (struct object* player, struct object* platform);
 
-void checkCollisions(struct position* player, struct position* platform);
+void checkCollisions(struct object* player, struct object* platform);
 
-void updateScreenPosition(struct position* player, struct position* platform, float* score);
+void updateScreenobject(struct object* player, struct object* platform, float* score);
 
-void updateWaterAnimation(const unsigned short** waterSprite);
+void updateWaterAnimation(struct object* waterSprite);
 
 void display_ScoreSevenSeg (float score);
 

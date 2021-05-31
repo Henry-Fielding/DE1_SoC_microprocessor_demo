@@ -15,24 +15,21 @@
 #define MAX_VERT_VELOCITY 15 // maximum velocity of player when bouncing
 #define VERT_ACCELERATION 1	// VERT_ACCELERATION rate of player when bouncing
 #define HORZ_ACCELERATION 1
-
 #define MAX_HEIGHT 120	// max screen height reached by player when bouncing (screen scrolls beyond this)
 
 main() {
-	const unsigned short* waterSprite = water0;
+//	const unsigned short* waterSprite = water0;
 	unsigned short screenBuffer[76800];
-	unsigned int timerLast = 0;
-	float score = 0;
+	unsigned int timerLast;
 
 	int i;
-	int j;
 
-	struct position player;
-	struct position platform[10];
+	int gameState = INTRO;
 
-	initPlayer(&player);
-	initPlatforms(platform);
-
+	float score = 0;
+	struct object player;
+	struct object water;
+	struct object platform[10];
 
 
 	//configure drivers
@@ -41,39 +38,82 @@ main() {
 	timerLast = Timer_readTimer();
 
 	LT24_initialise(0xFF200060,0xFF200080);
-
 	HPS_ResetWatchdog();
-
-	// introduction
-	pushButtons_clear ();
-	while (!*key_edge_ptr & 0x01) HPS_ResetWatchdog(); // do nothing while waiting for key press
-	pushButtons_clear ();
-
-	srand(Timer_readTimer());
-
-	LT24_copyFrameBuffer(background, 0, 0, 240, 320);
 
 	while (1) {
 		if (timerLast - Timer_readTimer() >= 16666){
 			timerLast = Timer_readTimer();
 
-			updatePlayer(&player, platform);
-			updateScreenPosition(&player, platform, &score);
-			updateWaterAnimation(&waterSprite); // add to some sort of timer function for the sake of it
+			switch (gameState) {
+				case INTRO :
+					ScreenBuffer_resetBuffer(screenBuffer, background);
+					ScreenBuffer_drawSprite(screenBuffer, water0, 0, 288, 240, 32);
+					ScreenBuffer_drawSprite(screenBuffer, introSprite, 0, 100, 240, 70);	// draw intro screen
 
-			display_ScoreSevenSeg(score);
+					LT24_copyFrameBuffer(screenBuffer, 0, 0, 240, 320);
 
-			ScreenBuffer_resetBuffer(screenBuffer, background);
-			for (i = 0; i < 10; i++) {
-				if (platform[i].y >= -16 && platform[i].y < 350) {
-					ScreenBuffer_drawSprite(screenBuffer, platform[i].spriteId, platform[i].x, platform[i].y, 48, 16);
-				}
+					// change state conditions
+					if(*key_edge_ptr & 0x01) {
+						gameState = INIT;
+						pushButtons_clear();
+					}
+				break;
+
+				case INIT :
+					srand(Timer_readTimer());
+					score = 0;
+					initPlayer(&player);
+					initPlatforms(platform);
+					water.spriteId = water0;
+
+					// change state conditions
+					gameState = GAMELOOP;
+				break;
+
+				case GAMELOOP :
+					// state functions
+					updatePlayer(&player, platform);
+					updateScreenobject(&player, platform, &score);
+					updateWaterAnimation(&water); // add to some sort of timer function for the sake of it
+
+					display_ScoreSevenSeg(score);
+
+					ScreenBuffer_resetBuffer(screenBuffer, background);
+					for (i = 0; i < 10; i++) {
+						if (platform[i].y >= -16 && platform[i].y < 350) {
+							ScreenBuffer_drawSprite(screenBuffer, platform[i].spriteId, platform[i].x, platform[i].y, 48, 16);
+						}
+					}
+					ScreenBuffer_drawSprite(screenBuffer, player.spriteId, player.x, player.y, 32, 64); 	// draw player sprite
+					ScreenBuffer_drawSprite(screenBuffer, water.spriteId, 0, 288, 240, 32); 					//draw water sprite
+					ScreenBuffer_drawScore(screenBuffer, score, 2, 0xFFFF, 120, 305);
+
+
+					LT24_copyFrameBuffer(screenBuffer, 0, 0, 240, 320);
+
+					// change state conditions
+					if (player.y > 288) {
+						gameState = GAMEOVER;
+						pushButtons_clear();
+					}
+
+				break;
+
+				case GAMEOVER :
+					// state functions
+					ScreenBuffer_drawSprite(screenBuffer, gameoverSprite, 0, 100, 240, 91);	// draw gameover screen
+					ScreenBuffer_drawSprite(screenBuffer, water.spriteId, 0, 288, 240, 32); 	// hide old score
+					ScreenBuffer_drawScore(screenBuffer, score, 2, 0xFFFF, 60,  137);		// write current score
+
+					LT24_copyFrameBuffer(screenBuffer, 0, 0, 240, 320);
+
+					//change state conditions
+					if(*key_edge_ptr & 0x01) {
+						gameState = INIT;
+						pushButtons_clear();
+					}
+				break;
 			}
-			ScreenBuffer_drawSprite(screenBuffer, player.spriteId, player.x, player.y, 32, 64); 	// draw player sprite
-			ScreenBuffer_drawSprite(screenBuffer, waterSprite, 0, 288, 240, 32); 					//draw water sprite
-			ScreenBuffer_drawScore(screenBuffer, score, 2, 0xFFFF, 120, 305);
-
-			LT24_copyFrameBuffer(screenBuffer, 0, 0, 240, 320);
 		}
 			// Finally, reset the watchdog timer.
 			HPS_ResetWatchdog();
@@ -81,7 +121,7 @@ main() {
 }
 
 
-void initPlayer (struct position* player) {
+void initPlayer (struct object* player) {
 	player->x 			= 102;
 	player->y 			= 208;
 	player->dx			= 0;
@@ -89,9 +129,9 @@ void initPlayer (struct position* player) {
 	player->spriteId	= marioRightStand;
 }
 
-void initPlatforms (struct position* platform) {
-	//struct position platform[10];
-// generate 10 platforms and assign positions randomly on screen
+void initPlatforms (struct object* platform) {
+	//struct object platform[10];
+// generate 10 platforms and assign objects randomly on screen
 	int i;
 	platform[0].x = 96;
 	platform[0].y = 272;
@@ -108,7 +148,7 @@ void initPlatforms (struct position* platform) {
 	}
 }
 
-void updatePlayer (struct position* player, struct position* platform) {
+void updatePlayer (struct object* player, struct object* platform) {
 	// player motion in y direction
 	player->dy = player->dy + VERT_ACCELERATION; // reduce player velocity
 	player->y = player->y + player->dy;
@@ -132,7 +172,9 @@ void updatePlayer (struct position* player, struct position* platform) {
 	checkCollisions(player, platform);
 }
 
-void checkCollisions(struct position* player, struct position* platform) {
+// update animation using statemachine
+
+void checkCollisions(struct object* player, struct object* platform) {
 	int i;
 
 	for (i = 0; i < 10; i++){
@@ -146,7 +188,7 @@ void checkCollisions(struct position* player, struct position* platform) {
 	}
 }
 
-void updateScreenPosition(struct position* player, struct position* platform, float* score) {
+void updateScreenobject(struct object* player, struct object* platform, float* score) {
 	int i;
 
 	if (player->y < MAX_HEIGHT) {
@@ -156,7 +198,7 @@ void updateScreenPosition(struct position* player, struct position* platform, fl
 			platform[i].dy = player->dy;
 			platform[i].y = platform[i].y - platform[i].dy;
 
-			if (platform[i].y > 320){
+			if (platform[i].y > 300){
 				platform[i].x = rand()%191;
 				if (i == 0)	platform[i].y = platform[9].y - (rand()%84 + 16);
 				else 		platform[i].y = platform[i-1].y - (rand()%84 + 16);
@@ -166,11 +208,11 @@ void updateScreenPosition(struct position* player, struct position* platform, fl
 
 }
 
-void updateWaterAnimation(const unsigned short** waterSprite) {
-	if 		(*waterSprite == water0)	*waterSprite = water1;
-	else if	(*waterSprite == water1)	*waterSprite = water2;
-	else if	(*waterSprite == water2)	*waterSprite = water3;
-	else if	(*waterSprite == water3)	*waterSprite = water0;
+void updateWaterAnimation(struct object* water) {
+	if 		(water->spriteId == water0)	water->spriteId = water1;
+	else if	(water->spriteId == water1)	water->spriteId = water2;
+	else if	(water->spriteId == water2)	water->spriteId = water3;
+	else if	(water->spriteId == water3)	water->spriteId = water0;
 }
 
 //void update screen() {};
@@ -199,29 +241,16 @@ void configure_privateTimer () {
 	Timer_setControl(224, 0, 1, 0);	// timer initialised to disabled mode
 }
 
-
-
-
-
-
-
-
-
-
-
-
 //
 // Defunct
 //
-
-
 
 // function to clear all previous sprites are reset background
 //void clearbackground (const unsigned short* background, unsigned int xorigin, unsigned int yorigin, unsigned int width, unsigned int height) {
 //	unsigned int i;
 //	unsigned int j;
 //
-//	unsigned int index = (yorigin * width) + xorigin; // set initial index position
+//	unsigned int index = (yorigin * width) + xorigin; // set initial index object
 //	unsigned int cnt = 0;
 //	//const unsigned int patchsize = (width * height);
 //	unsigned short patch [2048];
