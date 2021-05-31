@@ -12,5 +12,6 @@
 #include "BackgroundSprites.h"
 #include "PlatformSprites.h"
 #include "WaterSprites.h"
+#include "PopupSprites.h"
 
 #endif /* SPRITES_SPRITES_H_ */
