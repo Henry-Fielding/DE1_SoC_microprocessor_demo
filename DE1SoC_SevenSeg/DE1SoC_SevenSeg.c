@@ -150,3 +150,17 @@ void DE1SoC_SevenSeg_SetDoubleDec(unsigned int display, unsigned int value) {
 	DE1SoC_SevenSeg_Write(display, digitFirst);
 	DE1SoC_SevenSeg_Write(display + 1, digitSecond);
 }
+
+void DE1SoC_SevenSeg_SetSingleAlpha(unsigned int display, unsigned int value) {
+	// conversion array stores the seven-segment display value corresponding to the array index value
+	// value 0: stores - character
+	// value 1 - 26: stores the corresponding alphabetical letter (except where none exists e.g w)
+	int conversionArray[27] = {0x40 ,0x5F, 0x79, 0x58, 0x5E, 0x7B, 0x71, 0x6F, 0x74, 0x06, 0x0E, 0x40, 0x38, 0x40, 0x54, 0x5C, 0x73, 0x67, 0x50, 0x6D, 0x78, 0x1C, 0x1C, 0x40, 0x76, 0x6E, 0x5B};
+
+	// if value is within input range convert to seven segment, else display - character
+	if (value <= 26)	value = conversionArray[value];
+	else				value = 0x40;
+
+	// pass converted display value to the display writing function
+	DE1SoC_SevenSeg_Write(display, value);
+}

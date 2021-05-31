@@ -57,4 +57,15 @@ void DE1SoC_SevenSeg_SetDoubleHex(unsigned int display, unsigned int value);
  */
 void DE1SoC_SevenSeg_SetDoubleDec(unsigned int display, unsigned int value);
 
+/**
+ * DE1SoC_SevenSeg_SetDoubleDec
+ *
+ * Set a single seven segment displays from a alphabetical (A-Z) value.
+ *
+ * Inputs:
+ * 		display:		displays to update (0-4)
+ * 		value: 			value to assign to the display (00-26)
+ */
+void DE1SoC_SevenSeg_SetSingleAlpha(unsigned int display, unsigned int value);
+
 #endif /* DE1SoC_SEVENSEG_H_ */
