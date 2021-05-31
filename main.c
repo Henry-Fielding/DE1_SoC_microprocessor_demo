@@ -22,7 +22,18 @@ main() {
 	const unsigned short* waterSprite = water0;
 	unsigned short currentFrame[76800];
 	unsigned int timerLast = 0;
+	float score = 0;
+	char scoreChar[10] = "SCR";
 	int i;
+	int j;
+
+
+	//unsigned short letter[160];
+//	signed char line;
+////	unsigned short colour;
+//	int size;
+//	char test;
+	unsigned short charSprite[640];
 
 	struct position player;
 	struct position platform[10];
@@ -55,14 +66,51 @@ main() {
 			timerLast = Timer_readTimer();
 
 			updatePlayer(&player, platform);
-			updateScreenPosition(&player, platform);
-			updateWaterAnimation(waterSprite);
+			updateScreenPosition(&player, platform, &score);
+			updateWaterAnimation(&waterSprite); // add to some sort of timer function for the sake of it
+
+			// draw score to screen and to BCD counter
+
+			// display score on seven seg lcd
+			display_ScoreSevenSeg(score);
+
+			resetFrame(currentFrame, background);
+
+			// read the font map
+			// add the values to an array in the correct colour
+
+			// draw the array to the correct position
+
+//			colour = 0xF000;
+//
+//			size = 2;
+//
+//			test = 'A';
+//
+//			if (size < 1) size = 1;
+//			else if (size > 4) size = 4;
+//
+//			for (i = 0; i < (5 * size); i++) {
+//				line = BF_fontMap[test-' '][i/size];
+//				for (j = 0; j < 8*size; j++){
+//
+//					if ((line & 0x01) != 0x00 ) letter[(5 * size * j) + i] = colour;
+//					else  letter[(5 * size * j) + i] = 0x0001;
+//
+//					if ((j + 1) % size == 0)	line = line >> 1;
+//				}
+//			}
+//
+
+
+
+
 
 
 
 			// draw sprites
 
-			resetFrame(currentFrame, background);
+
 
 			for (i = 0; i < 10; i++) {
 				if (platform[i].y >= -16 && platform[i].y < 350) {
@@ -73,10 +121,46 @@ main() {
 			addToFrame(currentFrame, player.spriteId, player.x, player.y, 32, 64); 	// draw player sprite
 			addToFrame(currentFrame, waterSprite, 0, 288, 240, 32); 					//draw water sprite
 
+			//ScreenBuffer_generateChar (charSprite, 'F', 2, 0xF000);
+			//addToFrame(currentFrame, charSprite, 50, 50, 5*2, 8*2);
+
+			ScreenBuffer_addCharsToFrame(currentFrame, scoreChar, 2, 0XFFFF, 120, 305);
+
+
 			LT24_copyFrameBuffer(currentFrame, 0, 0, 240, 320);
 		}
+
 			// Finally, reset the watchdog timer.
 			HPS_ResetWatchdog();
+	}
+}
+
+void ScreenBuffer_generateChar (unsigned short* charSprite, char letter, unsigned int size , unsigned short colour)  {
+	signed char line;
+	int i, j;
+
+	if (size < 1) size = 1;
+	else if (size > 4) size = 4;
+
+	for (i = 0; i < (5 * size); i++) {
+		line = BF_fontMap[letter -' '][i/size];
+		for (j = 0; j < 8*size; j++){
+
+			if ((line & 0x01) != 0x00 ) charSprite[(5 * size * j) + i] = colour;
+			else  charSprite[(5 * size * j) + i] = 0x0001;
+
+			if ((j + 1) % size == 0)	line = line >> 1;
+		}
+	}
+}
+
+void ScreenBuffer_addCharsToFrame(unsigned short* currentFrame, char* string, unsigned int size, unsigned int colour, unsigned int xOrigin, unsigned int yOrigin) {
+	unsigned short charSprite[640];
+	int i;
+
+	for (i = 0; string[i] != '\0'; i++) {
+		ScreenBuffer_generateChar (charSprite, string[i], size, colour);
+		addToFrame(currentFrame, charSprite, (xOrigin + (i*6*size)), yOrigin, 5*size, 8*size);
 	}
 }
 
@@ -119,6 +203,9 @@ void updatePlayer (struct position* player, struct position* platform) {
 	} else if (*key_ptr & 0x02) {
 		player->dx = player->dx - HORZ_ACCELERATION;
 		player->spriteId = marioLeftJump;
+	} else {
+		if (player->dx >= 0) player->spriteId = marioRightJump;
+		if (player->dx < 0 ) player->spriteId = marioLeftJump;
 	}
 
 	player->x  = player->x + player->dx;
@@ -142,11 +229,12 @@ void checkCollisions(struct position* player, struct position* platform) {
 	}
 }
 
-void updateScreenPosition(struct position* player, struct position* platform) {
+void updateScreenPosition(struct position* player, struct position* platform, float* score) {
 	int i;
 
 	if (player->y < MAX_HEIGHT) {
 		player->y = 120;
+		*score = *score - (player->dy / 100);
 		for (i = 0; i < 10; i++) {
 			platform[i].dy = player->dy;
 			platform[i].y = platform[i].y - platform[i].dy;
@@ -161,11 +249,11 @@ void updateScreenPosition(struct position* player, struct position* platform) {
 
 }
 
-void updateWaterAnimation(const unsigned short* waterSprite) {
-	if 		(waterSprite == &water0)	waterSprite = water1;
-	else if	(waterSprite == &water1)	waterSprite = water2;
-	else if	(waterSprite == &water2)	waterSprite = water3;
-	else if	(waterSprite == *water3)	waterSprite = water0;
+void updateWaterAnimation(const unsigned short** waterSprite) {
+	if 		(*waterSprite == water0)	*waterSprite = water1;
+	else if	(*waterSprite == water1)	*waterSprite = water2;
+	else if	(*waterSprite == water2)	*waterSprite = water3;
+	else if	(*waterSprite == water3)	*waterSprite = water0;
 }
 
 //void update screen() {};
@@ -180,7 +268,6 @@ void resetFrame (unsigned short* currentFrame, const unsigned short* background)
 void addToFrame (unsigned short* currentFrame, const unsigned short* newLayer, signed int xOrigin, signed int yOrigin, unsigned int width, unsigned int height) {
 	signed int xInit, yInit, xEnd, yEnd;
 	signed int xAddr, yAddr, newLayerIndex, currentFrameIndex;
-
 	// select section of sprite that is on screen
 	xInit = xOrigin;
 	if (xInit < 0) xInit = 0;
@@ -202,9 +289,16 @@ void addToFrame (unsigned short* currentFrame, const unsigned short* newLayer, s
 
 			if (xAddr < xOrigin || xAddr >= xOrigin + width || yAddr < yOrigin || yAddr >= yOrigin + height || newLayer[newLayerIndex] == 0x0001) {} // do nothing
 			else currentFrame[currentFrameIndex] = newLayer[newLayerIndex];
-
 		}
 	}
+}
+
+void display_ScoreSevenSeg (float score) {
+	DE1SoC_SevenSeg_SetSingleAlpha(5, 19);
+	DE1SoC_SevenSeg_SetSingleAlpha(4, 3);
+	DE1SoC_SevenSeg_SetSingleAlpha(3, 18);
+	DE1SoC_SevenSeg_SetSingle(2, (int)(score/100)%10);
+	DE1SoC_SevenSeg_SetDoubleDec(0, (int)score%100);
 }
 
 // function to clear inputs

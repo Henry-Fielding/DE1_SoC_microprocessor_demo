@@ -20,6 +20,7 @@
 #include "DE1SoC_LT24/DE1SoC_LT24.h"
 #include "DE1Soc_SevenSeg/DE1Soc_SevenSeg.h"
 #include "HPS_PrivateTimer/HPS_PrivateTimer.h"
+#include "BasicFont/BasicFont.h"
 
 #include "Sprites/Sprites.h"						// sprite bitmaps
 
@@ -60,8 +61,14 @@ void updatePlayer (struct position* player, struct position* platform);
 
 void checkCollisions(struct position* player, struct position* platform);
 
-void updateScreenPosition(struct position* player, struct position* platform);
+void updateScreenPosition(struct position* player, struct position* platform, float* score);
 
-void updateWaterAnimation(const unsigned short* waterSprite);
+void updateWaterAnimation(const unsigned short** waterSprite);
+
+void display_ScoreSevenSeg (float score);
+
+void ScreenBuffer_generateChar (unsigned short* charSprite, char letter, unsigned int size , unsigned short colour);
+
+void ScreenBuffer_addCharsToFrame(unsigned short* currentFrame, char* string, unsigned int size, unsigned int colour, unsigned int xOrigin, unsigned int yOrigin);
 
 #endif /* MAIN_H_ */
