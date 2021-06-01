@@ -6,7 +6,7 @@
  *
  * Description
  * -----------
- * A collection of sprites of the player character mario in various positions
+ * A set of bitmaps for the player character mario in various positions
  */
 
 #if defined(__AVR__)

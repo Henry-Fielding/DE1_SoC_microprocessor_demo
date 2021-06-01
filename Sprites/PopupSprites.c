@@ -1,12 +1,12 @@
 /*
- * Platform Sprites (source file)
+ * Popup Sprites (source file)
  * --------------------------
- * Created on: 28/05/2021
+ * Created on: 31/05/2021
  * Author: Henry Fielding
  *
  * Description
  * -----------
- * A bitmap of the background
+ * Bitmaps for the intro and gameover popups
  */
 
 #if defined(__AVR__)

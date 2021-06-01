@@ -1,12 +1,12 @@
 /*
- * Platform Sprites (source file)
+ * Water Sprites (source file)
  * --------------------------
- * Created on: 28/05/2021
+ * Created on: 30/05/2021
  * Author: Henry Fielding
  *
  * Description
  * -----------
- * A bitmap of the background
+ * A set of bitmaps for the water animation sprites
  */
 
 #if defined(__AVR__)
