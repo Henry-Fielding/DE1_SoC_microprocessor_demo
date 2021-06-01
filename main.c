@@ -18,27 +18,25 @@
 #define MAX_HEIGHT 120	// max screen height reached by player when bouncing (screen scrolls beyond this)
 
 main() {
-//	const unsigned short* waterSprite = water0;
-	unsigned short screenBuffer[76800];
+	// declare task scheduler variables
 	unsigned int timerLast;
 
-	int i;
-
+	// declare game variables
 	int gameState = INTRO;
-
+	unsigned short screenBuffer[76800];
 	float score = 0;
 	struct object player;
 	struct object water;
 	struct object platform[10];
-
+	int i;
 
 	//configure drivers
-	configure_privateTimer();
+	configure_privateTimer();	//TODO: add these functions
 	Timer_setControl(224, 0, 1, 1);
 	timerLast = Timer_readTimer();
 
 	LT24_initialise(0xFF200060,0xFF200080);
-	HPS_ResetWatchdog();
+	//HPS_ResetWatchdog();
 
 	while (1) {
 		if (timerLast - Timer_readTimer() >= 16666){
@@ -46,14 +44,17 @@ main() {
 
 			switch (gameState) {
 				case INTRO :
-					ScreenBuffer_resetBuffer(screenBuffer, background);
-					ScreenBuffer_drawSprite(screenBuffer, water0, 0, 288, 240, 32);
+					// update screen buffer
+					ScreenBuffer_resetBuffer(screenBuffer, background);						// clear to background
+					ScreenBuffer_drawSprite(screenBuffer, water0, 0, 288, 240, 32);			// draw water sprite
 					ScreenBuffer_drawSprite(screenBuffer, introSprite, 0, 100, 240, 70);	// draw intro screen
 
-					LT24_copyFrameBuffer(screenBuffer, 0, 0, 240, 320);
+					// update displays
+					LT24_copyFrameBuffer(screenBuffer, 0, 0, 240, 320);	// copy screen buffer to display
+					display_ScoreSevenSeg(score);						// display score on seven seg LCD
 
 					// change state conditions
-					if(*key_edge_ptr & 0x01) {
+					if(*key_edge_ptr & 0x01) {	// if key0 is pressed
 						gameState = INIT;
 						pushButtons_clear();
 					}
@@ -71,28 +72,24 @@ main() {
 				break;
 
 				case GAMELOOP :
-					// state functions
-					updatePlayer(&player, platform);
-					updateScreenobject(&player, platform, &score);
-					updateWaterAnimation(&water); // add to some sort of timer function for the sake of it
+					// update game object positions and animations
+					updatePlayer(&player, platform);				// update player position and animation
+					updateScreenobject(&player, platform, &score);	// update platforms positions and animations
+					updateWaterAnimation(&water);					// update water animation
 
-					display_ScoreSevenSeg(score);
+					// update screen buffer
+					ScreenBuffer_resetBuffer(screenBuffer, background);																			// clear to background
+					for (i = 0; i < 10; i++) ScreenBuffer_drawSprite(screenBuffer, platform[i].spriteId, platform[i].x, platform[i].y, 48, 16);	// draw platforms
+					ScreenBuffer_drawSprite(screenBuffer, player.spriteId, player.x, player.y, 32, 64);											// draw player sprite
+					ScreenBuffer_drawSprite(screenBuffer, water.spriteId, 0, 288, 240, 32);														// draw water sprite
+					ScreenBuffer_drawScore(screenBuffer, score, 2, 0xFFFF, 120, 305);															// draw score sprite
 
-					ScreenBuffer_resetBuffer(screenBuffer, background);
-					for (i = 0; i < 10; i++) {
-						if (platform[i].y >= -16 && platform[i].y < 350) {
-							ScreenBuffer_drawSprite(screenBuffer, platform[i].spriteId, platform[i].x, platform[i].y, 48, 16);
-						}
-					}
-					ScreenBuffer_drawSprite(screenBuffer, player.spriteId, player.x, player.y, 32, 64); 	// draw player sprite
-					ScreenBuffer_drawSprite(screenBuffer, water.spriteId, 0, 288, 240, 32); 					//draw water sprite
-					ScreenBuffer_drawScore(screenBuffer, score, 2, 0xFFFF, 120, 305);
-
-
-					LT24_copyFrameBuffer(screenBuffer, 0, 0, 240, 320);
+					// update displays
+					LT24_copyFrameBuffer(screenBuffer, 0, 0, 240, 320);	// copy screen buffer to display
+					display_ScoreSevenSeg(score);						// display score on seven seg LCD
 
 					// change state conditions
-					if (player.y > 288) {
+					if (player.y > 288) {	// if player falls in water
 						gameState = GAMEOVER;
 						pushButtons_clear();
 					}
@@ -100,15 +97,17 @@ main() {
 				break;
 
 				case GAMEOVER :
-					// state functions
-					ScreenBuffer_drawSprite(screenBuffer, gameoverSprite, 0, 100, 240, 91);	// draw gameover screen
-					ScreenBuffer_drawSprite(screenBuffer, water.spriteId, 0, 288, 240, 32); 	// hide old score
-					ScreenBuffer_drawScore(screenBuffer, score, 2, 0xFFFF, 60,  137);		// write current score
+					// update screen buffer
+					ScreenBuffer_drawSprite(screenBuffer, gameoverSprite, 0, 100, 240, 91);	// draw game over screen
+					ScreenBuffer_drawSprite(screenBuffer, water.spriteId, 0, 288, 240, 32);	// hide old score position (bottom right)
+					ScreenBuffer_drawScore(screenBuffer, score, 2, 0xFFFF, 60,  137);		// write current score to screen centre
 
-					LT24_copyFrameBuffer(screenBuffer, 0, 0, 240, 320);
+					// update displays
+					LT24_copyFrameBuffer(screenBuffer, 0, 0, 240, 320);	// copy screen buffer to display
+					display_ScoreSevenSeg(score);						// display score on seven seg LCD
 
 					//change state conditions
-					if(*key_edge_ptr & 0x01) {
+					if(*key_edge_ptr & 0x01) {	// if key 0 is pressed
 						gameState = INIT;
 						pushButtons_clear();
 					}
@@ -240,30 +239,3 @@ void configure_privateTimer () {
 	Timer_setLoadValue(0xFFFFFFFF);	// load maximum value
 	Timer_setControl(224, 0, 1, 0);	// timer initialised to disabled mode
 }
-
-//
-// Defunct
-//
-
-// function to clear all previous sprites are reset background
-//void clearbackground (const unsigned short* background, unsigned int xorigin, unsigned int yorigin, unsigned int width, unsigned int height) {
-//	unsigned int i;
-//	unsigned int j;
-//
-//	unsigned int index = (yorigin * width) + xorigin; // set initial index object
-//	unsigned int cnt = 0;
-//	//const unsigned int patchsize = (width * height);
-//	unsigned short patch [2048];
-//
-//	//copy first row
-//	for (i = 0; i < height; i = i + 1){
-//		for (j = 0; j < width; j = j + 1) {
-//			patch[cnt] = background[index + j];
-//			cnt = cnt + 1;
-//		}
-//		index = index + 240;
-//	}
-//
-//	//LT24_drawSprite(patch, xorigin, yorigin, width, height);
-//}
-

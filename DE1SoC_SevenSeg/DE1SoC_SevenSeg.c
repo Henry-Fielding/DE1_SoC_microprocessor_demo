@@ -8,7 +8,7 @@
 
 #include "DE1SoC_SevenSeg.h"
 
-// ToDo: Add the base addresses of the seven segment display peripherals.
+// DONE: Add the base addresses of the seven segment display peripherals.
 volatile unsigned char *sevenseg_base_lo_ptr = (unsigned char *) 0xFF200020;
 volatile unsigned char *sevenseg_base_hi_ptr = (unsigned char *) 0xFF200030;
 
@@ -34,7 +34,7 @@ void DE1SoC_SevenSeg_Write(unsigned int display, unsigned char value) {
 }
 
 void DE1SoC_SevenSeg_SetSingle(unsigned int display, unsigned int value) {
-    // ToDo: Write the code for driving a single seven segment display here.
+    // DONE: Write the code for driving a single seven segment display here.
     // Your function should turn a real value 0-F into the correctly encoded
     // bits to enable the correct segments on the seven segment display to
     // illuminate. Use the DE1SoC_SevenSeg_Write function you created earlier
@@ -59,7 +59,7 @@ void DE1SoC_SevenSeg_SetSingle(unsigned int display, unsigned int value) {
 }
 
 void DE1SoC_SevenSeg_SetDoubleHex(unsigned int display, unsigned int value) {
-    // ToDo: Write the code for setting a pair of seven segment displays
+    // DONE: Write the code for setting a pair of seven segment displays
     // here. Good coding practice suggests your solution should call
     // DE1SoC_SevenSeg_SetSingle() twice.
     // This function should show the first digit of a HEXADECIMAL number on
@@ -106,7 +106,7 @@ void DE1SoC_SevenSeg_SetDoubleHex(unsigned int display, unsigned int value) {
 }
 
 void DE1SoC_SevenSeg_SetDoubleDec(unsigned int display, unsigned int value) {
-    // ToDo: Write the code for setting a pair of seven segment displays
+    // DONE: Write the code for setting a pair of seven segment displays
     // here. Good coding practice suggests your solution should call
     // DE1SoC_SevenSeg_SetSingle() twice.
     // This function should show the first digit of a DECIMAL number on
