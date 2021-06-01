@@ -32,14 +32,14 @@ main() {
 
 	//configure drivers
 	configure_privateTimer();	//TODO: add these functions
-	Timer_setControl(224, 0, 1, 1);
+
 	timerLast = Timer_readTimer();
 
 	LT24_initialise(0xFF200060,0xFF200080);
 	//HPS_ResetWatchdog();
 
 	while (1) {
-		if (timerLast - Timer_readTimer() >= 16666){
+		if (timerLast - Timer_readTimer() >= 16666){ //TODO: define framerate
 			timerLast = Timer_readTimer();
 
 			switch (gameState) {
@@ -73,12 +73,12 @@ main() {
 
 				case GAMELOOP :
 					// update game object positions and animations
-					updatePlayer(&player, platform);				// update player position and animation
+					updatePlayer(&player, platform);				// update player position and animation TODO: combine
 					updateScreenobject(&player, platform, &score);	// update platforms positions and animations
-					updateWaterAnimation(&water);					// update water animation
+					updateWaterAnimation(&water);					// update water animation TODO: add to task scheduler
 
 					// update screen buffer
-					ScreenBuffer_resetBuffer(screenBuffer, background);																			// clear to background
+					ScreenBuffer_resetBuffer(screenBuffer, background);																			// clear to background TODO: combine into singel function
 					for (i = 0; i < 10; i++) ScreenBuffer_drawSprite(screenBuffer, platform[i].spriteId, platform[i].x, platform[i].y, 48, 16);	// draw platforms
 					ScreenBuffer_drawSprite(screenBuffer, player.spriteId, player.x, player.y, 32, 64);											// draw player sprite
 					ScreenBuffer_drawSprite(screenBuffer, water.spriteId, 0, 288, 240, 32);														// draw water sprite
@@ -119,8 +119,9 @@ main() {
 	}
 }
 
-
+// set initial values for the player object
 void initPlayer (struct object* player) {
+	// set initial values for the player object
 	player->x 			= 102;
 	player->y 			= 208;
 	player->dx			= 0;
@@ -128,26 +129,28 @@ void initPlayer (struct object* player) {
 	player->spriteId	= marioRightStand;
 }
 
+// set initial values for the platform objects
 void initPlatforms (struct object* platform) {
-	//struct object platform[10];
-// generate 10 platforms and assign objects randomly on screen
 	int i;
+
+	// set initial value for the first platform object (under players feet)
 	platform[0].x = 96;
 	platform[0].y = 272;
 	platform[0].dx = 0;
 	platform[0].dy = 0;
 	platform[0].spriteId = platformSprite;
 
+	// randomly generate initials values for the remaining platform objects
 	for (i = 1; i < 10; i++) {
-		platform[i].x = rand()%191;
-		platform[i].y = platform[i-1].y - (rand()%70 + 16);
+		platform[i].x = rand()%191;							// x is randomly generated within the LCD screen width (- platform width)
+		platform[i].y = platform[i-1].y - (rand()%70 + 16);	// y is randomly generated within an appropriate range of previous platform
 		platform[i].dx = 0;
 		platform[i].dy = 0;
 		platform[i].spriteId = platformSprite;
 	}
 }
 
-void updatePlayer (struct object* player, struct object* platform) {
+void updatePlayer (struct object* player, struct object* platform) { // TODO: seperate player animation from player motion?
 	// player motion in y direction
 	player->dy = player->dy + VERT_ACCELERATION; // reduce player velocity
 	player->y = player->y + player->dy;
@@ -172,8 +175,7 @@ void updatePlayer (struct object* player, struct object* platform) {
 }
 
 // update animation using statemachine
-
-void checkCollisions(struct object* player, struct object* platform) {
+void checkCollisions(struct object* player, struct object* platform) { //TODO: clean
 	int i;
 
 	for (i = 0; i < 10; i++){
@@ -187,7 +189,7 @@ void checkCollisions(struct object* player, struct object* platform) {
 	}
 }
 
-void updateScreenobject(struct object* player, struct object* platform, float* score) {
+void updateScreenobject(struct object* player, struct object* platform, float* score) { //TODO: clean
 	int i;
 
 	if (player->y < MAX_HEIGHT) {
@@ -207,6 +209,7 @@ void updateScreenobject(struct object* player, struct object* platform, float* s
 
 }
 
+// function to increment the water sprite pointer to next water bitmap
 void updateWaterAnimation(struct object* water) {
 	if 		(water->spriteId == water0)	water->spriteId = water1;
 	else if	(water->spriteId == water1)	water->spriteId = water2;
@@ -214,17 +217,13 @@ void updateWaterAnimation(struct object* water) {
 	else if	(water->spriteId == water3)	water->spriteId = water0;
 }
 
-//void update screen() {};
-
-
-
-
+// function to display score value of 7 segment display
 void display_ScoreSevenSeg (float score) {
-	DE1SoC_SevenSeg_SetSingleAlpha(5, 19);
-	DE1SoC_SevenSeg_SetSingleAlpha(4, 3);
-	DE1SoC_SevenSeg_SetSingleAlpha(3, 18);
-	DE1SoC_SevenSeg_SetSingle(2, (int)(score/100)%10);
-	DE1SoC_SevenSeg_SetDoubleDec(0, (int)score%100);
+	DE1SoC_SevenSeg_SetSingleAlpha(5, 19);				// S
+	DE1SoC_SevenSeg_SetSingleAlpha(4, 3);				// C
+	DE1SoC_SevenSeg_SetSingleAlpha(3, 18);				// R
+	DE1SoC_SevenSeg_SetSingle(2, (int)(score/100)%10);	// score[Digit 2]
+	DE1SoC_SevenSeg_SetDoubleDec(0, (int)score%100);	// score[Digit 1: Digit 0]
 }
 
 // function to clear inputs
@@ -234,8 +233,10 @@ void pushButtons_clear () {
 	*key_edge_ptr = temp;
 }
 
+// function to configure the private timer
+// initialises to prescaler = 224 (freq = 1MHz) and timer to enabled
 void configure_privateTimer () {
 	Timer_initialise(0xFFFEC600);	// set private timer base address
 	Timer_setLoadValue(0xFFFFFFFF);	// load maximum value
-	Timer_setControl(224, 0, 1, 0);	// timer initialised to disabled mode
+	Timer_setControl(224, 0, 1, 1);	// timer initialised to enabled mode
 }
