@@ -21,9 +21,7 @@
 #include "DE1SoC_LT24/DE1SoC_LT24.h"
 #include "DE1Soc_SevenSeg/DE1Soc_SevenSeg.h"
 #include "HPS_PrivateTimer/HPS_PrivateTimer.h"
-#include "BasicFont/BasicFont.h"
-
-#include "ScreenBuffer.h"
+#include "ScreenBuffer/ScreenBuffer.h"
 
 #include "Sprites/Sprites.h"						// sprite bitmaps
 
@@ -42,7 +40,7 @@ volatile unsigned int *LEDR_ptr = (unsigned int *)0xFF200000; 		// LEDS 0-9
 volatile unsigned int *key_ptr = (unsigned int *)0xFF200050; // KEYS 0-3 (push buttons)
 
 
-struct object {
+struct object { //TODO: add size to object
 	signed int x, y;
 	float dx, dy;
 	const unsigned short* spriteId;

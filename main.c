@@ -12,10 +12,11 @@
 
 #include "main.h"
 
-#define MAX_VERT_VELOCITY 15 // maximum velocity of player when bouncing
-#define VERT_ACCELERATION 1	// VERT_ACCELERATION rate of player when bouncing
-#define HORZ_ACCELERATION 1
-#define MAX_HEIGHT 120	// max screen height reached by player when bouncing (screen scrolls beyond this)
+#define FRAME_RATE 30
+#define MAX_VERT_VELOCITY 15	// maximum velocity of player when bouncing
+#define VERT_ACCELERATION 1		// downward acceleration of player when bouncing
+#define HORZ_ACCELERATION 1		// side to side acceleration of player
+#define MAX_HEIGHT 120			// max screen height reached by player when bouncing (screen scrolls beyond this)
 
 main() {
 	// declare task scheduler variables
@@ -35,11 +36,11 @@ main() {
 
 	timerLast = Timer_readTimer();
 
-	LT24_initialise(0xFF200060,0xFF200080);
+	LT24_initialise(0xFF200060, 0xFF200080);
 	//HPS_ResetWatchdog();
 
 	while (1) {
-		if (timerLast - Timer_readTimer() >= 16666){ //TODO: define framerate
+		if (timerLast - Timer_readTimer() >= 1000000 / FRAME_RATE){
 			timerLast = Timer_readTimer();
 
 			switch (gameState) {
