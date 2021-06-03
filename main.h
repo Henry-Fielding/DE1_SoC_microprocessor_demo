@@ -13,9 +13,6 @@
 #ifndef MAIN_H_
 #define MAIN_H_
 
-//#include <string.h>
-
-
 // include required header files
 #include "HPS_Watchdog/HPS_Watchdog.h"			// hardware drivers
 #include "DE1SoC_LT24/DE1SoC_LT24.h"
@@ -31,17 +28,15 @@ enum State {
 	GAMEOVER
 };
 
-
-
-//
-// function declarations
-//
-void configure_privateTimer (void);
+// function to display score value of 7 segment display
+void display_ScoreSevenSeg (float score);
 
 // function to clear inputs
 // clears all set bits in the key edge register by writing 1 to them
 void pushButtons_clear (void);
 
-void display_ScoreSevenSeg (float score);
+// function to configure the private timer
+// initialises to prescaler = 224 (freq = 1MHz) and timer to enabled
+void configure_privateTimer (void);
 
 #endif /* MAIN_H_ */

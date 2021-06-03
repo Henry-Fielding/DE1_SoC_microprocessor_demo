@@ -151,6 +151,7 @@ void DE1SoC_SevenSeg_SetDoubleDec(unsigned int display, unsigned int value) {
 	DE1SoC_SevenSeg_Write(display + 1, digitSecond);
 }
 
+// Function to set a single seven segment displays from a alphabetical (A-Z) value.
 void DE1SoC_SevenSeg_SetSingleAlpha(unsigned int display, unsigned int value) {
 	// conversion array stores the seven-segment display value corresponding to the array index value
 	// value 0: stores - character

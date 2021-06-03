@@ -49,16 +49,16 @@ main() {
 			switch (gameState) {
 				case INTRO :
 					// update screen buffer
-					ScreenBuffer_resetBuffer(screenBuffer, background);						// clear to background
-					ScreenBuffer_drawSprite(screenBuffer, water.spriteId, water.x, water.y, water.width, water.height);					// draw water sprite
-					ScreenBuffer_drawSprite(screenBuffer, introSprite, 0, 100, 240, 70);	// draw intro screen
+					ScreenBuffer_resetBuffer(screenBuffer, background);													// clear to background
+					ScreenBuffer_drawSprite(screenBuffer, water.spriteId, water.x, water.y, water.width, water.height);	// draw water sprite
+					ScreenBuffer_drawSprite(screenBuffer, introSprite, 0, 100, 240, 70);								// draw intro screen
 
 					// update displays
 					LT24_copyFrameBuffer(screenBuffer, 0, 0, 240, 320);	// copy screen buffer to display
 					display_ScoreSevenSeg(score);						// display score on seven seg LCD
 
 					// change state conditions
-					if(*key_edge_ptr & 0x01) {	// if key0 is pressed
+					if(*key_edge_ptr & 0x01) {		// if key0 is pressed
 						gameState = INIT;
 						pushButtons_clear();
 					}
@@ -77,16 +77,16 @@ main() {
 
 				case GAMELOOP :
 					// update game object positions and animations
-					GameFunction_updatePlayer(&player, platform);				// update player position and animation TODO: combine
+					GameFunction_updatePlayer(&player, platform);							// update player position and animation
 					GameFunction_updateScreenobject(&player, platform, &score, difficulty);	// update platforms positions and animations
-					GameFunction_updateWaterAnimation(&water);					// update water animation TODO: add to task scheduler
+					GameFunction_updateWaterAnimation(&water);								// update water animation
 
 					// update screen buffer
-					ScreenBuffer_resetBuffer(screenBuffer, background);																			// clear to background TODO: combine into singel function
+					ScreenBuffer_resetBuffer(screenBuffer, background);																											// clear to background
 					for (i = 0; i < 15; i++) ScreenBuffer_drawSprite(screenBuffer, platform[i].spriteId, platform[i].x, platform[i].y, platform[i].width, platform[i].height);	// draw platforms
-					ScreenBuffer_drawSprite(screenBuffer, player.spriteId, player.x, player.y, player.width,player.height);											// draw player sprite
-					ScreenBuffer_drawSprite(screenBuffer, water.spriteId, water.x, water.y, water.width, water.height);														// draw water sprite
-					ScreenBuffer_drawScore(screenBuffer, score, 2, 0xFFFF, 120, 305);															// draw score sprite
+					ScreenBuffer_drawSprite(screenBuffer, player.spriteId, player.x, player.y, player.width,player.height);														// draw player sprite
+					ScreenBuffer_drawSprite(screenBuffer, water.spriteId, water.x, water.y, water.width, water.height);															// draw water sprite
+					ScreenBuffer_drawScore(screenBuffer, score, 2, 0xFFFF, 120, 305);																							// draw score sprite
 
 					// update displays
 					LT24_copyFrameBuffer(screenBuffer, 0, 0, 240, 320);	// copy screen buffer to display
@@ -102,9 +102,9 @@ main() {
 
 				case GAMEOVER :
 					// update screen buffer
-					ScreenBuffer_drawSprite(screenBuffer, gameoverSprite, 0, 100, 240, 91);	// draw game over screen
+					ScreenBuffer_drawSprite(screenBuffer, gameoverSprite, 0, 100, 240, 91);								// draw game over screen
 					ScreenBuffer_drawSprite(screenBuffer, water.spriteId, water.x, water.y, water.width, water.height);	// hide old score position (bottom right)
-					ScreenBuffer_drawScore(screenBuffer, score, 2, 0xFFFF, 60,  137);		// write current score to screen centre
+					ScreenBuffer_drawScore(screenBuffer, score, 2, 0xFFFF, 60,  137);									// write current score to screen centre
 
 					// update displays
 					LT24_copyFrameBuffer(screenBuffer, 0, 0, 240, 320);	// copy screen buffer to display
@@ -118,8 +118,7 @@ main() {
 				break;
 			}
 		}
-			// Finally, reset the watchdog timer.
-			HPS_ResetWatchdog();
+			HPS_ResetWatchdog();	// Finally, reset the watchdog timer.
 	}
 }
 
